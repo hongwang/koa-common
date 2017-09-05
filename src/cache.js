@@ -73,6 +73,12 @@ export async function get(key) {
     }
 }
 
+function del(...keys) {
+    client.del(keys)
+}
+
 export function format_key_with_app(key) {
     return app + "::" + key;
 }
+
+export default { init, get, set, del }
