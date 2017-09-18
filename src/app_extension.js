@@ -27,4 +27,36 @@ export default function apply_extensions(app) {
             this.throw(400, `${missing.join()} required`)
         }
     }
+
+    app.context.success = function(data) {
+        const result = {
+            status_code: 200
+        }
+
+        if (data) {
+            result.data = data
+        }
+
+        this.body = result
+    }
+
+    app.context.failure = function(err_code, message) {
+        const result = {
+            status_code: err_code
+        }
+
+        if (message) {
+            result.message = message
+        }
+
+        this.body = result
+    }
+
+    app.context.done = function(success, err_code, message, data) {
+        if (success) {
+            this.success(data)
+        } else {
+            this.failure(err_code, message)
+        }
+    }
 }
