@@ -11,13 +11,13 @@ const TYPE_FLAGS = {
 
 let app, client;
 
-export function init(app_name, config) {
+function init(app_name, config) {
     app = app_name
     const redis_client = redis.createClient(config.port, config.host, config.options || {});
     client = co_wrapper(redis_client);
 }
 
-export async function set_raw(key, val, expire) {
+async function set_raw(key, val, expire) {
     if (!client) {
         throw Exception.NotInitialized
     }
@@ -27,7 +27,7 @@ export async function set_raw(key, val, expire) {
         : await client.set(key, val);
 }
 
-export async function get_raw(key) {
+async function get_raw(key) {
     if (!client) {
         throw Exception.NotInitialized
     }
@@ -35,7 +35,7 @@ export async function get_raw(key) {
     return await client.get(key);
 }
 
-export async function set(key, val, expire) {
+async function set(key, val, expire) {
 
     const val_type = Buffer.isBuffer(val) ? 'buffer' : typeof (val);
     let real_val;
@@ -47,12 +47,16 @@ export async function set(key, val, expire) {
         real_val = TYPE_FLAGS[val_type] + val.toString()
     }
 
-    await this.set_raw(key, real_val, expire);
+    await set_raw(key, real_val, expire);
 }
 
-export async function get(key) {
+async function get(key) {
 
-    const result = await this.get_raw(key);
+    const result = await get_raw(key);
+    if (!result) {
+        return null;
+    }
+
     const flag = result.substr(0, 2);
     const raw_val = result.substr(2);
 
@@ -69,7 +73,6 @@ export async function get(key) {
 
     } else {
         return raw_val;
-
     }
 }
 
@@ -77,8 +80,8 @@ function del(...keys) {
     client.del(keys)
 }
 
-export function format_key_with_app(key) {
+function format_key_with_app(key) {
     return app + "::" + key;
 }
 
-export default { init, get, set, del }
+export default { init, get: get, set: set, del, format_key_with_app }
